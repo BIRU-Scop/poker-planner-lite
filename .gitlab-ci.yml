@@ -1,0 +1,12 @@
+include:
+  # In staging, we pre-released with a suffix
+  - component: $CI_SERVER_FQDN/biru/sre/component/build-and-push@v1.1.1
+    inputs:
+      stage: 'build'
+      build-arg: 'RELEASE_VERSION=master MQTT_HOST=test MQTT_USER=test MQTT_PWD=test'
+      rule-condition: "$CI_COMMIT_BRANCH == 'master'"
+      # For testing, the build-and-push job
+      # extra-args: '--target builder'
+      # rule-condition: '$CI_COMMIT_BRANCH'
+stages:
+  - build
