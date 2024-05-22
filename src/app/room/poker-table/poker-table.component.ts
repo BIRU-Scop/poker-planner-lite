@@ -11,7 +11,7 @@ import { RoomStore, UserStore } from '@poker/data-models';
     <div class="flex gap-3 place-content-center">
       @for (item of roomStore.currentVotes() | keyvalue; track item.key) {
         @if (item.key !== userStore.user()?.name) {
-          <div class="flex flex-col">
+          <div class="flex flex-col items-center gap-0.5">
             <app-poker-card
               [content]="item.value"
               size="S"
