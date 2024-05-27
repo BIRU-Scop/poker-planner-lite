@@ -10,5 +10,7 @@ export const environment: EnvironmentConfig = {
     hostname: '$MQTT_HOST',
     username: '$MQTT_USER',
     password: '$MQTT_PWD',
+    protocol: 'wss',
+    port: parseInt('$MQTT_PORT'),
   },
 };
