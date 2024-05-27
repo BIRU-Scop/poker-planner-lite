@@ -1,12 +1,16 @@
 include:
-  # In staging, we pre-released with a suffix
-  - component: $CI_SERVER_FQDN/biru/sre/component/build-and-push@v1.1.1
+  - component: $CI_SERVER_FQDN/biru/project-components/merge-branches@0.0.8
     inputs:
-      stage: 'build'
-      build-arg: 'RELEASE_VERSION=master MQTT_HOST=test MQTT_USER=test MQTT_PWD=test'
-      rule-condition: "$CI_COMMIT_BRANCH == 'master'"
-      # For testing, the build-and-push job
-      # extra-args: '--target builder'
-      # rule-condition: '$CI_COMMIT_BRANCH'
+      token: $DEV_TOKEN
+  - component: $CI_SERVER_FQDN/biru/project-components/build-deploy@0.0.8
+    inputs:
+      build-arg: 'RELEASE_VERSION=$NEXT_VERSION MQTT_HOST=$MQTT_HOST MQTT_USER=$MQTT_USER MQTT_PWD=$MQTT_PWD MQTT_PORT=$MQTT_PORT'
+      project-name: poker-planner-lite
+      application-name: web-app
+  - component: $CI_SERVER_FQDN/biru/project-components/release@0.0.8
+    inputs:
+      token: $DEV_TOKEN
 stages:
-  - build
+  - release
+  - build-deploy
+  - merge
