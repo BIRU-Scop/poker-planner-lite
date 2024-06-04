@@ -11,5 +11,7 @@ export const environment: EnvironmentConfig = {
     hostname: 'localhost',
     username: 'user',
     password: 'password',
+    protocol: 'ws',
+    port: 8080,
   },
 };

@@ -13,7 +13,6 @@ export interface EnvironmentConfig {
 }
 
 export const mqttDefaults: IMqttServiceOptions = {
-  port: 8080,
   path: '/mqtt',
   protocolVersion: 5,
 };
