@@ -3,7 +3,8 @@ ARG NODE_VERSION=20
 FROM node:${NODE_VERSION} AS dev-env
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+RUN --mount=type=cache,target=/root/.npm \
+npm install
 COPY --chown=node:node . .
 
 # Step 2: Build the production environment
@@ -18,11 +19,14 @@ ARG MQTT_PWD=password
 ARG MQTT_PORT=8080
 WORKDIR /app
 ## replace args in environment file
-RUN apt-get update && apt-get install -y gettext-base && rm -rf /var/lib/apt/lists/*
-RUN envsubst < src/environments/environment.${CONFIGURATION}.ts > res.txt
-RUN mv res.txt src/environments/environment.${CONFIGURATION}.ts
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+--mount=type=cache,target=/var/lib/apt,sharing=locked \
+apt-get update && apt-get install -y gettext-base && rm -rf /var/lib/apt/lists/*
+RUN envsubst < src/environments/environment.${CONFIGURATION}.ts > res.txt && \
+mv res.txt src/environments/environment.${CONFIGURATION}.ts
 ## build the app in configuration passed
-RUN npx ng build --configuration ${CONFIGURATION}
+RUN --mount=type=cache,target=.angular/cache \
+npx ng build --configuration ${CONFIGURATION}
 
 # Step 3: Serve the app with Caddy
 FROM caddy:2-alpine
