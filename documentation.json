@@ -2021,21 +2021,21 @@
         "name": "initialState",
         "ctype": "miscellaneous",
         "subtype": "variable",
-        "file": "src/libs/data-models/user/user.store.ts",
-        "deprecated": false,
-        "deprecationMessage": "",
-        "type": "UserState",
-        "defaultValue": "{\n  user: null,\n}"
-      },
-      {
-        "name": "initialState",
-        "ctype": "miscellaneous",
-        "subtype": "variable",
         "file": "src/libs/data-models/room/room.store.ts",
         "deprecated": false,
         "deprecationMessage": "",
         "type": "RoomState",
         "defaultValue": "{\n  currentRoom: roomDefault,\n  availableRooms: [],\n  countdown: null,\n}"
+      },
+      {
+        "name": "initialState",
+        "ctype": "miscellaneous",
+        "subtype": "variable",
+        "file": "src/libs/data-models/user/user.store.ts",
+        "deprecated": false,
+        "deprecationMessage": "",
+        "type": "UserState",
+        "defaultValue": "{\n  user: null,\n}"
       },
       {
         "name": "meta",
@@ -2638,28 +2638,6 @@
           "defaultValue": "{\n  port: 8080,\n  path: '/mqtt',\n  protocolVersion: 5,\n}"
         }
       ],
-      "src/libs/data-models/user/user.store.ts": [
-        {
-          "name": "initialState",
-          "ctype": "miscellaneous",
-          "subtype": "variable",
-          "file": "src/libs/data-models/user/user.store.ts",
-          "deprecated": false,
-          "deprecationMessage": "",
-          "type": "UserState",
-          "defaultValue": "{\n  user: null,\n}"
-        },
-        {
-          "name": "UserStore",
-          "ctype": "miscellaneous",
-          "subtype": "variable",
-          "file": "src/libs/data-models/user/user.store.ts",
-          "deprecated": false,
-          "deprecationMessage": "",
-          "type": "",
-          "defaultValue": "signalStore(\n  withDevtools('users'),\n  withState<UserState>(initialState),\n  withComputed(({ user }) => ({\n    userDisplayRole: computed(() => {\n      const currentUser = user();\n      if (currentUser != null) {\n        return UserRoleEnum[currentUser.role];\n      }\n      return null;\n    }),\n  })),\n  withMethods(store => ({\n    syncCachedUser(): void {\n      const savedUser: string | null = localStorage.getItem('user');\n      if (savedUser) {\n        const user: UserModel = JSON.parse(savedUser);\n        patchState(store, () => ({ user }));\n      }\n    },\n    setUser(user: UserModel): void {\n      patchState(store, () => ({ user }));\n      localStorage.setItem('user', JSON.stringify(user));\n    },\n  })),\n  withHooks({\n    onInit(store) {\n      store.syncCachedUser();\n    },\n  })\n)"
-        }
-      ],
       "src/libs/data-models/room/room.store.ts": [
         {
           "name": "initialState",
@@ -2680,6 +2658,28 @@
           "deprecationMessage": "",
           "type": "",
           "defaultValue": "signalStore(\n  withDevtools('rooms'),\n  withState<RoomState>(initialState),\n  withComputed(({ currentRoom }) => ({\n    currentVotes: computed(\n      () => currentRoom.votePerRoundPerPlayer()[currentRoom.currentRound()]\n    ),\n    historyVotes: computed(() => {\n      return Object.fromEntries(\n        Object.entries(currentRoom.votePerRoundPerPlayer()).filter(\n          ([round]) => Number(round) != currentRoom.currentRound()\n        )\n      );\n    }),\n    currentPlayers: computed(() =>\n      Object.keys(\n        currentRoom.votePerRoundPerPlayer()[currentRoom.currentRound()]\n      )\n    ),\n  })),\n  withMethods((store, roomService = inject(RoomService)) => {\n    const launchCountdown = rxMethod<number | null>(\n      switchMap(countdownSeconds => {\n        console.debug('launchCountdown', countdownSeconds);\n        if (countdownSeconds === null) {\n          return EMPTY;\n        }\n        return timer(0, 1000).pipe(\n          scan(acc => --acc, countdownSeconds + 1),\n          take(countdownSeconds + 1),\n          tap(countdown => {\n            console.debug('countdown', countdown);\n            patchState(store, () => ({\n              countdown,\n            }));\n          })\n        );\n      })\n    );\n    const stopCountdown = rxMethod<void>(\n      switchMap(() => {\n        // workaround to make countdown stop instead of using launchCountdown.unsubscribe\n        // because it seems to prevent countdown from being started ever again afterward\n        launchCountdown(null);\n        // no idea why this is necessary instead of synchronously calling patchState...\n        return timer(0, 1000).pipe(\n          take(1),\n          tap(() =>\n            patchState(store, () => ({\n              countdown: null,\n            }))\n          )\n        );\n      })\n    );\n\n    function getCurrentRound(name: string) {\n      console.debug('getCurrentRound', name);\n      return roomService.getCurrentRound(name).pipe(\n        tapResponse({\n          next: (currentRound: number) => {\n            console.debug('service getCurrentRound', name, currentRound);\n            patchState(store, state => {\n              if (state.currentRoom.currentRound !== currentRound) {\n                const currentPlayers = Object.keys(\n                  state.currentRoom.votePerRoundPerPlayer[\n                    state.currentRoom.currentRound\n                  ]\n                );\n                // update round, clone player\n                return {\n                  countdown: null,\n                  currentRoom: {\n                    ...state.currentRoom,\n                    currentRound,\n                    votePerRoundPerPlayer: {\n                      ...state.currentRoom.votePerRoundPerPlayer,\n                      [currentRound]: Object.fromEntries(\n                        currentPlayers.map(player => [player, null])\n                      ),\n                    },\n                  } as RoomModel,\n                };\n              } else {\n                return {};\n              }\n            });\n          },\n          error: console.error,\n        })\n      );\n    }\n\n    function getPlayers(name: string) {\n      console.debug('getPlayers', name);\n      return roomService.getPlayers(name).pipe(\n        tapResponse({\n          next: ({ player, isDeleted }) => {\n            console.debug('service getPlayers', name, player, isDeleted);\n            patchState(store, state => {\n              if (isDeleted) {\n                const { [player]: removedKey, ...roundVoteWithoutPlayer } =\n                  state.currentRoom.votePerRoundPerPlayer[\n                    state.currentRoom.currentRound\n                  ];\n                if (\n                  Object.values(roundVoteWithoutPlayer).every(\n                    voteOption => voteOption !== null\n                  )\n                ) {\n                  // without that player, all votes have been received\n                  launchCountdown(environment.defaultCountdown);\n                }\n                return {\n                  currentRoom: {\n                    ...state.currentRoom,\n                    votePerRoundPerPlayer: {\n                      ...state.currentRoom.votePerRoundPerPlayer,\n                      [state.currentRoom.currentRound]: roundVoteWithoutPlayer,\n                    },\n                  } as RoomModel,\n                };\n              }\n              stopCountdown();\n              return {\n                currentRoom: {\n                  ...state.currentRoom,\n                  votePerRoundPerPlayer: {\n                    ...state.currentRoom.votePerRoundPerPlayer,\n                    [state.currentRoom.currentRound]: {\n                      ...state.currentRoom.votePerRoundPerPlayer[\n                        state.currentRoom.currentRound\n                      ],\n                      [player]: null,\n                    },\n                  },\n                },\n              };\n            });\n          },\n          error: console.error,\n        })\n      );\n    }\n\n    function getVotes(name: string) {\n      console.debug('getVotes', name);\n      return roomService.getVotes(name).pipe(\n        tapResponse({\n          next: ({ roundNumber, player, voteOption }) => {\n            console.debug(\n              'service getVotes',\n              name,\n              roundNumber,\n              player,\n              voteOption\n            );\n            patchState(store, state => {\n              const newResult = {\n                ...state.currentRoom.votePerRoundPerPlayer[roundNumber],\n                [player]: voteOption,\n              };\n              if (\n                Object.values(newResult).every(\n                  voteOption => voteOption !== null\n                )\n              ) {\n                // all votes have been received\n                launchCountdown(environment.defaultCountdown);\n              }\n              return {\n                currentRoom: {\n                  ...state.currentRoom,\n                  votePerRoundPerPlayer: {\n                    ...state.currentRoom.votePerRoundPerPlayer,\n                    [roundNumber]: newResult,\n                  },\n                } as RoomModel,\n              };\n            });\n          },\n          error: console.error,\n        })\n      );\n    }\n\n    return {\n      listAll: rxMethod<void>(\n        exhaustMap(() => {\n          console.debug('listAll');\n          return roomService.listAll().pipe(\n            tapResponse({\n              next: (availableRoom: string) =>\n                patchState(store, state => ({\n                  availableRooms: [...state.availableRooms, availableRoom],\n                })),\n              error: console.error,\n            })\n          );\n        })\n      ),\n\n      addPlayerToRoom(\n        playerName: string,\n        onComplete: (() => void) | undefined = undefined\n      ): void {\n        const state = getState(store);\n        console.debug('addPlayerToRoom', state.currentRoom.name, playerName);\n        roomService.addPlayerToRoom(\n          state.currentRoom.name,\n          playerName,\n          onComplete\n        );\n      },\n\n      removePlayerFromRoom(playerName: string): void {\n        const state = getState(store);\n        console.debug(\n          'removePlayerFromRoom',\n          state.currentRoom.name,\n          playerName\n        );\n        roomService.removePlayerFromRoom(state.currentRoom.name, playerName);\n      },\n\n      vote(user: UserModel | null, voteOption: VoteChoice): void {\n        const state = getState(store);\n        console.debug('vote', state.currentRoom, user, voteOption);\n        roomService.vote(\n          state.currentRoom.name,\n          state.currentRoom.currentRound,\n          user,\n          voteOption\n        );\n      },\n\n      incrementRound(): void {\n        const state = getState(store);\n        console.debug('incrementRound', state.currentRoom.currentRound);\n        roomService.setRound(\n          state.currentRoom.name,\n          state.currentRoom.currentRound + 1\n        );\n      },\n\n      getOne: rxMethod<string>(\n        exhaustMap((name: string) => {\n          console.debug('getOne', name);\n          patchState(store, state => ({\n            currentRoom: {\n              ...state.currentRoom,\n              name,\n            } as RoomModel,\n          }));\n          return merge(getPlayers(name), getCurrentRound(name), getVotes(name));\n        })\n      ),\n\n      launchCountdown,\n      stopCountdown,\n    };\n  })\n)"
+        }
+      ],
+      "src/libs/data-models/user/user.store.ts": [
+        {
+          "name": "initialState",
+          "ctype": "miscellaneous",
+          "subtype": "variable",
+          "file": "src/libs/data-models/user/user.store.ts",
+          "deprecated": false,
+          "deprecationMessage": "",
+          "type": "UserState",
+          "defaultValue": "{\n  user: null,\n}"
+        },
+        {
+          "name": "UserStore",
+          "ctype": "miscellaneous",
+          "subtype": "variable",
+          "file": "src/libs/data-models/user/user.store.ts",
+          "deprecated": false,
+          "deprecationMessage": "",
+          "type": "",
+          "defaultValue": "signalStore(\n  withDevtools('users'),\n  withState<UserState>(initialState),\n  withComputed(({ user }) => ({\n    userDisplayRole: computed(() => {\n      const currentUser = user();\n      if (currentUser != null) {\n        return UserRoleEnum[currentUser.role];\n      }\n      return null;\n    }),\n  })),\n  withMethods(store => ({\n    syncCachedUser(): void {\n      const savedUser: string | null = localStorage.getItem('user');\n      if (savedUser) {\n        const user: UserModel = JSON.parse(savedUser);\n        patchState(store, () => ({ user }));\n      }\n    },\n    setUser(user: UserModel): void {\n      patchState(store, () => ({ user }));\n      localStorage.setItem('user', JSON.stringify(user));\n    },\n  })),\n  withHooks({\n    onInit(store) {\n      store.syncCachedUser();\n    },\n  })\n)"
         }
       ],
       ".storybook/preview.ts": [

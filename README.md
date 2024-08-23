@@ -19,7 +19,7 @@ No need for authentication since we will deploy only as an internal tool with ac
 
 ## Tech Stack
 
-We use Angular for the frontend and communicate via websocket to a MQTT server supporting protocol version 5 (in our case we use VerneMQ).
+We use Angular for the frontend and communicate via websocket to a MQTT server supporting protocol version 5 (in our case we use EMQX).
 We do not need to keep voting data for long, hence MQTT was a good solution to handle clients communication.
 
 Just a SPA frontend and an MQTT server, nothing else.
@@ -30,11 +30,16 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 
 ### Development server
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+Run `ng serve` for a dev server.
+Navigate to http://localhost:4200/. The application will automatically reload if you change any of the source files.
+
+Run `docker compose up` to launch the MQTT server.
+MQTT dashboard will be available at http://localhost:18083/.
+Login with "admin:public" (you will then be asked for a password)
 
 ### Storybook
 
-Run `npm run storybook` for a dev server. Navigate to `http://localhost:6006/`.
+Run `npm run storybook` for a dev server. Navigate to http://localhost:6006/.
 
 ### Code scaffolding
 

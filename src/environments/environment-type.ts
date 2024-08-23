@@ -13,6 +13,8 @@ export interface EnvironmentConfig {
 }
 
 export const mqttDefaults: IMqttServiceOptions = {
+  port: 8084,
+  protocol: 'wss',
   path: '/mqtt',
   protocolVersion: 5,
 };

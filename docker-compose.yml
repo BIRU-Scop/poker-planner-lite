@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   app:
     build:
@@ -6,34 +5,31 @@ services:
       dockerfile: Dockerfile
       target: dev-env
       # To test the build of the image
-      # args:
-      #   - NODE_ENV=production
-      #   - CONFIGURATION=production
-      #   - RELEASE_VERSION=1.0.0
-      #   - MQTT_HOST=localhost
-      #   - MQTT_USER=user
-      #   - MQTT_PWD=password
-      #   - MQTT_PORT=8080
+    #      args:
+    #       - NODE_ENV=production
+    #       - CONFIGURATION=production
+    #       - RELEASE_VERSION=1.0.0
+    #       - MQTT_HOST=localhost
+    #       - MQTT_USER=user
+    #       - MQTT_PWD=password
+    #       - MQTT_PORT=8084
     command: ['npx', 'ng', 'serve', '--host', '0.0.0.0']
+    profiles:
+      - app
     ports:
       - 4200:4200
-  vernemq:
-    image: vernemq/vernemq:1.13.0-alpine
+  emqx:
+    image: emqx/emqx:5.7.2
     ports:
-      - '1883:1883' # MQTT
-      - '8080:8080' # MQTT over websocket
-    # you can exec `vmq-admin trace client client-id=<client-id>` if you want more tracing on what's happening
-    # other useful commands are found here:
-    #   https://docs.vernemq.com/live-administration/managing-sessions
-    #   https://docs.vernemq.com/live-administration/retained-store
-    environment:
-      DOCKER_VERNEMQ_ACCEPT_EULA: 'yes'
-      DOCKER_VERNEMQ_USER_user: 'password'
-      DOCKER_VERNEMQ_VMQ_PASSWD.password_reload_interval: 0
-      DOCKER_VERNEMQ_LISTENER.tcp.allowed_protocol_versions: 3,4,5
-      DOCKER_VERNEMQ_LOG.console.level: debug
+      - '1883:1883' # MQTT over TCP
+      - '8883:8883' # MQTT over SSL
+      - '8083:8083' # MQTT over websocket
+      - '8084:8084' # MQTT over secure websocket
+      - '18083:18083' # dashboard
     volumes:
-      - vernemq-data:/vernemq/data/
+      - emqx-data:/opt/emqx/data
+      - emqx-log:/opt/emqx/log
 
 volumes:
-  vernemq-data:
+  emqx-data:
+  emqx-log:

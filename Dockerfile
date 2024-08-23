@@ -8,7 +8,7 @@ npm install
 COPY --chown=node:node . .
 
 # Step 2: Build the production environment
-FROM dev-env as builder
+FROM dev-env AS builder
 ARG CONFIGURATION=production
 ENV NODE_ENV production
 ## app args (don't put any quotes because quotes are already present in the environment file)
@@ -16,7 +16,7 @@ ARG RELEASE_VERSION
 ARG MQTT_HOST=localhost
 ARG MQTT_USER=user
 ARG MQTT_PWD=password
-ARG MQTT_PORT=8080
+ARG MQTT_PORT=8084
 WORKDIR /app
 ## replace args in environment file
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
