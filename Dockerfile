@@ -13,6 +13,8 @@ ARG CONFIGURATION=production
 ENV NODE_ENV production
 ## app args (don't put any quotes because quotes are already present in the environment file)
 ARG RELEASE_VERSION
+ARG SENTRY_DNS
+ARG SENTRY_ENVIRONMENT
 ARG MQTT_HOST=localhost
 ARG MQTT_USER=user
 ARG MQTT_PWD=password
@@ -37,6 +39,8 @@ ARG MQTT_HOST
 ARG MQTT_USER
 ARG MQTT_PWD
 ARG MQTT_PORT
+ARG SENTRY_DNS
+ARG SENTRY_ENVIRONMENT
 ARG APP="poker-planner-lite"
 COPY --from=builder /app/dist/${APP}/browser/ /usr/share/caddy
 COPY ./Caddyfile /etc/caddy/Caddyfile
