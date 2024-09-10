@@ -1,5 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import { IMqttServiceOptions } from 'ngx-mqtt';
+import { BrowserSentryClientOptions } from '@micro-sentry/browser';
 
 export const ENVIRONMENT_CONFIG = new InjectionToken('ENVIRONMENT_CONFIG');
 
@@ -10,6 +11,7 @@ export interface EnvironmentConfig {
 
   defaultCountdown: number; // in seconds
   mqttConfigOptions: IMqttServiceOptions;
+  sentryOptions: BrowserSentryClientOptions;
 }
 
 export const mqttDefaults: IMqttServiceOptions = {

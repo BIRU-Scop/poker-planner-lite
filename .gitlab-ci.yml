@@ -4,7 +4,7 @@ include:
       token: $DEV_TOKEN
   - component: $CI_SERVER_FQDN/biru/project-components/build-deploy@0.0.8
     inputs:
-      build-arg: 'RELEASE_VERSION=$NEXT_VERSION MQTT_HOST=$MQTT_HOST MQTT_USER=$MQTT_USER MQTT_PWD=$MQTT_PWD MQTT_PORT=$MQTT_PORT'
+      build-arg: 'RELEASE_VERSION=$NEXT_VERSION MQTT_HOST=$MQTT_HOST MQTT_USER=$MQTT_USER MQTT_PWD=$MQTT_PWD MQTT_PORT=$MQTT_PORT SENTRY_ENVIRONMENT=$CI_COMMIT_REF_SLUG SENTRY_DSN=$SENTRY_DNS'
       project-name: poker-planner-lite
       application-name: web-app
   - component: $CI_SERVER_FQDN/biru/project-components/release@0.0.8

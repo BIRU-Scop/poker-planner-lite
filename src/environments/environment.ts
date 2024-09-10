@@ -4,6 +4,7 @@ export const environment: EnvironmentConfig = {
   appVersion: 'dev',
   production: false,
   env: 'dev',
+  sentryOptions: {},
 
   defaultCountdown: 3,
   mqttConfigOptions: {
