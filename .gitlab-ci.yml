@@ -14,7 +14,7 @@ include:
       when: on_success
   - component: $CI_SERVER_FQDN/biru/project-components/build-deploy@0.0.13
     inputs:
-      build-arg: 'RELEASE_VERSION=$NEXT_VERSION MQTT_HOST=$MQTT_HOST MQTT_USER=$MQTT_USER MQTT_PWD=$MQTT_PWD MQTT_PORT=$MQTT_PORT SENTRY_ENVIRONMENT=$CI_COMMIT_REF_SLUG SENTRY_DSN=$SENTRY_DNS'
+      build-arg: 'RELEASE_VERSION=$NEXT_VERSION MQTT_HOST=$MQTT_HOST MQTT_USER=$MQTT_USER MQTT_PWD=$MQTT_PWD MQTT_PORT=$MQTT_PORT SENTRY_ENVIRONMENT=$CI_COMMIT_REF_SLUG SENTRY_DSN=$SENTRY_DSN'
       project-name: poker-planner-lite
       application-name: web-app
   - component: $CI_SERVER_FQDN/biru/project-components/release@0.0.13
