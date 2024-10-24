@@ -37,6 +37,8 @@ Run `docker compose up` to launch the MQTT server.
 MQTT dashboard will be available at http://localhost:18083/.
 Login with "admin:public" (you will then be asked for a password)
 
+You can also use `docker compose --profile app up` to launch both the app and the server via docker (urls are still the same).
+
 ### Storybook
 
 Run `npm run storybook` for a dev server. Navigate to http://localhost:6006/.
